@@ -1,0 +1,591 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tic Tac Toe - Fun Game</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#fff0f5">
+
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg,#ffe0ec,#dff5ff,#e9e0ff);
+}
+
+.game {
+  width: 100%;
+  max-width: 420px;
+  padding: 25px 20px;
+  text-align: center;
+  border-radius: 28px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 0 12px 35px #9c83b455;
+}
+
+h1 { color: #8058bd; margin: 0 0 8px; }
+.subtitle { color: #999; margin-bottom: 20px; }
+
+.section-title {
+  color: #7555a8;
+  font-weight: bold;
+  margin: 18px 0 10px;
+}
+
+.modes, .levels {
+  display: flex;
+  gap: 8px;
+}
+
+.modes button, .levels button {
+  flex: 1;
+  border: 2px solid #eadfff;
+  border-radius: 13px;
+  padding: 11px 4px;
+  background: #f8f4ff;
+  color: #7555a8;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button.active {
+  background: #a88be5;
+  color: white;
+  border-color: #a88be5;
+}
+
+.levels button { font-size: 13px; }
+
+.scoreboard {
+  display: flex;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.score {
+  flex: 1;
+  padding: 12px 5px;
+  border-radius: 15px;
+  background: #f3edff;
+  color: #7555a8;
+  font-weight: bold;
+}
+
+.score span {
+  display: block;
+  font-size: 25px;
+  margin-top: 5px;
+}
+
+.status {
+  color: #65547d;
+  font-size: 17px;
+  font-weight: bold;
+  min-height: 25px;
+  margin: 15px 0;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 10px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border: none;
+  border-radius: 18px;
+  background: #f0eaff;
+  color: #ff78a8;
+  font-size: 48px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 8px #bca9d633;
+  transition: .2s;
+}
+.cell.win-cell {
+  background: #b8f7d4;
+  box-shadow: 0 0 12px #35c98b;
+  border: 3px solid #35c98b;
+}
+
+.cell:nth-child(even) {
+  background: #e4f5ff;
+  color: #58a9dc;
+}
+
+.cell:active { transform: scale(.93); }
+.cell:disabled { cursor: default; }
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.actions button {
+  flex: 1;
+  border: none;
+  padding: 14px 6px;
+  border-radius: 14px;
+  background: #a88be5;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.actions button:last-child { background: #ff91b8; }
+
+.hidden { display: none; }
+
+.footer {
+  color: #aaa;
+  font-size: 12px;
+  margin-top: 18px;
+}
+@keyframes celebrate {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.12) rotate(3deg); }
+  100% { transform: scale(1); }
+}
+
+.winner-animation {
+  animation: celebrate 0.5s ease 3;
+}
+
+.win-cell {
+  background: #b8f7cf !important;
+  color: #159653 !important;
+  box-shadow: 0 0 15px #68d99b;
+}
+
+.sound-button {
+  margin-top: 12px;
+  border: 0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  background: #e8ddff;
+  color: #7555a8;
+  font-weight: bold;
+  cursor: pointer;
+}
+.result-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.result-modal.hidden {
+  display: none;
+}
+
+.result-box {
+  background: white;
+  padding: 30px;
+  border-radius: 22px;
+  text-align: center;
+  width: 280px;
+  box-shadow: 0 10px 35px rgba(0,0,0,0.3);
+  animation: popupShow 0.3s ease;
+}
+
+.result-emoji {
+  font-size: 55px;
+}
+
+.result-box h2 {
+  color: #333;
+  margin: 12px 0;
+}
+
+.result-box p {
+  color: #777;
+}
+
+#playAgainBtn {
+  background: #16a36a;
+  color: white;
+  border: none;
+  padding: 12px 22px;
+  border-radius: 12px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+@keyframes popupShow {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+</style>
+</head>
+
+<body>
+<div class="game">
+
+  <h1>🌸 Tic Tac Toe</h1>
+  <div class="subtitle">Play • Think • Win • Enjoy!</div>
+
+  <div class="section-title">🎮 Choose Game Mode</div>
+  <div class="modes">
+    <button id="computerMode" class="active">🤖 Computer</button>
+    <button id="twoMode">👥 2 Players</button>
+  </div>
+
+  <div id="difficultyArea">
+    <div class="section-title">🏆 Difficulty Level</div>
+    <div class="levels">
+      <button data-level="easy" class="active">🟢 Easy 😊</button>
+      <button data-level="medium">🟡 Medium 🤔</button>
+      <button data-level="hard">🔴 Hard 🧠</button>
+    </div>
+  </div>
+
+  <div class="scoreboard">
+    <div class="score" id="labelX">You (X)<span id="scoreX">0</span></div>
+    <div class="score" id="labelO">Computer (O)<span id="scoreO">0</span></div>
+  </div>
+
+  <div class="status" id="status">Your turn! 😊</div>
+
+  <div class="board">
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+  </div>
+
+  <div class="actions">
+    <button id="newGame">🔄 New Game</button>
+    <button id="resetScore">🧹 Reset Score</button>
+  </div>
+
+  <div class="footer">Made with 💖 Enjoy your game!</div>
+</div>
+
+<script>
+const cells = [...document.querySelectorAll(".cell")];
+const statusText = document.getElementById("status");
+const computerMode = document.getElementById("computerMode");
+const twoMode = document.getElementById("twoMode");
+const difficultyArea = document.getElementById("difficultyArea");
+const levelButtons = [...document.querySelectorAll("[data-level]")];
+
+const wins = [
+  [0,1,2],[3,4,5],[6,7,8],
+  [0,3,6],[1,4,7],[2,5,8],
+  [0,4,8],[2,4,6]
+];
+let board = Array(9).fill("");
+let mode = "computer";
+let level = "easy";
+let turn = "X";
+let active = true;
+let scores = { X: 0, O: 0 };
+
+function winner(b) {
+  for (const line of wins) {
+    if (
+      b[line[0]] &&
+      b[line[0]] === b[line[1]] &&
+      b[line[1]] === b[line[2]]
+    ) {
+      return b[line[0]];
+    }
+  }
+  return "";
+}
+function getWinningLine() {
+  for (const line of wins) {
+    if (
+      board[line[0]] &&
+      board[line[0]] === board[line[1]] &&
+      board[line[1]] === board[line[2]]
+    ) {
+      return line;
+    }
+  }
+  return null;
+}
+
+function render() {
+  cells.forEach((cell, i) => {
+    cell.textContent = board[i];
+    cell.classList.remove("win-cell");
+
+    cell.disabled = !active || board[i] !== "" ||
+      (mode === "computer" && turn === "O");
+  });
+
+  const line = getWinningLine();
+
+  if (line) {
+    line.forEach(i => cells[i].classList.add("win-cell"));
+  }
+}
+
+function updateScores() {
+  document.getElementById("scoreX").textContent = scores.X;
+  document.getElementById("scoreO").textContent = scores.O;
+}
+
+let audioContext;
+
+function playSound(frequency = 500) {
+  try {
+    audioContext = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.frequency.value = frequency;
+    gain.gain.setValueAtTime(0.15, audioContext.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.2);
+
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + 0.2);
+  } catch (error) {
+    console.log("Sound unavailable");
+  }
+}
+ 
+function play(index, player) {
+  if (!active || board[index]) return;
+
+  board[index] = player;
+  playSound(player === "X" ? 600 : 750);
+
+  if (finishGame()) return;
+
+  turn = player === "X" ? "O" : "X";
+
+  statusText.textContent = mode === "computer"
+    ? (turn === "X" ? "Your turn! 😊" : "🤖 Computer is thinking...")
+    : "Player " + turn + "'s turn!";
+
+  render();
+
+  if (mode === "computer" && turn === "O") {
+    setTimeout(computerMove, 450);
+  }
+}
+
+function randomMove(b) {
+  const empty = b.map((v,i) => v === "" ? i : -1)
+    .filter(i => i !== -1);
+  return empty[Math.floor(Math.random() * empty.length)];
+}
+
+function findWinningMove(player) {
+  for (let i = 0; i < 9; i++) {
+    if (board[i]) continue;
+    const test = [...board];
+    test[i] = player;
+    if (winner(test) === player) return i;
+  }
+  return -1;
+}
+function showResult(title, message) {
+  document.getElementById("resultTitle").textContent = title;
+  document.getElementById("resultMessage").textContent = message;
+
+  document.getElementById("resultEmoji").textContent =
+    title.includes("DRAW") ? "🤝" : "🏆";
+
+  document.getElementById("resultModal").classList.remove("hidden");
+}
+function finishGame() {
+  const won = winner(board);
+
+  if (won) {
+    active = false;
+    scores[won]++;
+    updateScores();
+
+    const winMessage = mode === "computer"
+      ? (won === "X" ? "🎉 YOU WIN!" : "🏆 COMPUTER WINS!")
+      : (won === "X" ? "🎉 PLAYER X WINS!" : "🏆 PLAYER O WINS!");
+
+    statusText.textContent = winMessage;
+    playSound(850);
+    render();
+    showResult(winMessage, "Great game! 🎉");
+    return true;
+  }
+
+  if (board.every(Boolean)) {
+    active = false;
+    statusText.textContent = "🤝 It's a Draw!";
+    playSound(400);
+    render();
+    showResult("🤝 IT'S A DRAW!", "Good game! Try again.");
+    return true;
+  }
+
+  return false;
+}
+function minimax(b, player) {
+  const won = winner(b);
+  if (won === "O") return 10;
+  if (won === "X") return -10;
+  if (b.every(Boolean)) return 0;
+
+  const scores = [];
+
+  for (let i = 0; i < 9; i++) {
+    if (b[i]) continue;
+
+    const next = [...b];
+    next[i] = player;
+
+    scores.push({
+      index: i,
+      score: minimax(next, player === "O" ? "X" : "O")
+    });
+  }
+
+  if (player === "O") {
+    return Math.max(...scores.map(x => x.score));
+  }
+  return Math.min(...scores.map(x => x.score));
+}
+
+function hardMove() {
+  let bestScore = -Infinity;
+  let bestIndex = -1;
+
+  for (let i = 0; i < 9; i++) {
+    if (board[i]) continue;
+
+    const test = [...board];
+    test[i] = "O";
+    const score = minimax(test, "X");
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestIndex = i;
+    }
+  }
+
+  return bestIndex;
+}
+
+function computerMove() {
+  if (!active || mode !== "computer") return;
+
+  let move = -1;
+
+  if (level === "easy") {
+    move = randomMove(board);
+  }
+
+  if (level === "medium") {
+    move = findWinningMove("O");
+    if (move === -1) move = findWinningMove("X");
+    if (move === -1) move = randomMove(board);
+  }
+
+  if (level === "hard") {
+    move = hardMove();
+  }
+
+  if (move !== -1) play(move, "O");
+}
+
+cells.forEach((cell, i) => {
+  cell.addEventListener("click", () => {
+    if (mode === "computer" && turn !== "X") return;
+    play(i, turn);
+  });
+});
+function newGame() {
+  board = Array(9).fill("");
+  turn = "X";
+  active = true;
+  statusText.textContent = mode === "computer"
+    ? "Your turn! 😊"
+    : "Player X's turn!";
+  render();
+}
+document.addEventListener("click", function(event) {
+  if (event.target.id === "playAgainBtn") {
+    document.getElementById("resultModal").classList.add("hidden");
+    newGame();
+  }
+});
+computerMode.addEventListener("click", () => {
+  mode = "computer";
+  computerMode.classList.add("active");
+  twoMode.classList.remove("active");
+  difficultyArea.classList.remove("hidden");
+  document.getElementById("labelX").childNodes[0].textContent = "You (X)";
+  document.getElementById("labelO").childNodes[0].textContent = "Computer (O)";
+  newGame();
+});
+
+twoMode.addEventListener("click", () => {
+  mode = "two";
+  twoMode.classList.add("active");
+  computerMode.classList.remove("active");
+  difficultyArea.classList.add("hidden");
+  document.getElementById("labelX").childNodes[0].textContent = "Player X";
+  document.getElementById("labelO").childNodes[0].textContent = "Player O";
+  newGame();
+});
+
+levelButtons.forEach(button => {
+  button.addEventListener("click", () => {
+    level = button.dataset.level;
+    levelButtons.forEach(b => b.classList.remove("active"));
+    button.classList.add("active");
+    newGame();
+  });
+});
+
+document.getElementById("newGame").addEventListener("click", newGame);
+
+document.getElementById("resetScore").addEventListener("click", () => {
+  scores = { X: 0, O: 0 };
+  updateScores();
+  newGame();
+});
+
+render();
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js");
+  });
+}
+</script>
+<div id="resultModal" class="result-modal hidden">
+  <div class="result-box">
+    <div id="resultEmoji" class="result-emoji">🏆</div>
+    <h2 id="resultTitle">You Win!</h2>
+    <p id="resultMessage">Great game!</p>
+    <button id="playAgainBtn">🔄 Play Again</button>
+  </div>
+</div>
+</body>
+</html>
